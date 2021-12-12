@@ -1,4 +1,3 @@
-import queue
 from constant import *
 import pygame
 from queue import PriorityQueue
@@ -47,8 +46,7 @@ class Node:
         return self.f
 
     def is_visited(self):
-        colours = [RED, GREEN]
-        return self.colour in colours
+        return self.colour == RED
 
     def get_coordinate(self):
         '''return (x, y) coordinate of node in window'''
@@ -187,13 +185,13 @@ class Graph:
 
     def start_vis(self):
         if self.algo_choice == 0:
-            self.a_star_vis()
+            self.a_star()
         elif self.algo_choice == 1:
-            self.dijsktra_vis()
+            self.dijsktra()
         elif self.algo_choice == 2:
-            self.dfs_vis()
+            self.dfs() 
         elif self.algo_choice == 3:
-            self.bfs_vis()
+            self.bfs()
 
     def left_click(self, mouse_coordinate):
         # edit graph
@@ -229,7 +227,7 @@ class Graph:
         elif node == self.end:
             self.end = None
 
-    def a_star_vis(self):
+    def a_star(self):
         '''visualise a* path finding algorithm on grid / graph'''
         self.update_node_neighbours()
         i = 0
@@ -282,7 +280,7 @@ class Graph:
         return False
 
     
-    def dijsktra_vis(self):
+    def dijsktra(self):
         '''
         visualise dijkstra path finding algorithm on grid / graph
         similar to a*, however dijkstra does not consider f score
@@ -333,11 +331,40 @@ class Graph:
                 curr_node.set_closed()
 
 
-    def dfs_vis(self):
-        pass
+    def dfs(self):
+        self.update_node_neighbours()
+        stack = [self.start]
+
+        while len(stack) != 0:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+
+            curr_node = stack.pop()
+            if curr_node == self.end:
+                self.display_path()
+                return True
+
+            if not curr_node.is_visited():
+                if curr_node != self.start and curr_node != self.end:
+                    curr_node.set_open()
+                self.update()
+
+            if curr_node != self.start and curr_node != self.end:
+                curr_node.set_closed()
+
+            for neighbour in curr_node.get_neighbours():
+                if neighbour.get_prev() == None:
+                    neighbour.set_prev(curr_node)
+
+                if not neighbour.is_visited():
+                    stack.append(neighbour)
+                    if neighbour != self.start and neighbour != self.end:
+                        neighbour.set_open()
+                        self.update()
 
 
-    def bfs_vis(self):
+    def bfs(self):
         self.update_node_neighbours()
         queue = [self.start]
 

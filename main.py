@@ -27,7 +27,6 @@ def main():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_RETURN and not started:   # return / enter button clicked
                     started = True
-                    graph.print_graph()
                     graph.start_vis()
                     started = False
                 
