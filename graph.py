@@ -2,6 +2,7 @@ from constant import *
 import pygame
 from queue import PriorityQueue
 import math
+import random
 
 def h(pos1, pos2):
     '''heuristic function'''
@@ -33,6 +34,7 @@ class Node:
         self.colour = WHITE
         self.neighbours = []
         self.prev = None
+        self.wall_visited = False  # for generate maze
         self.g = 0
         self.f = 0
 
@@ -47,6 +49,9 @@ class Node:
 
     def is_visited(self):
         return self.colour == RED
+
+    def is_wall_visited(self):
+        return self.wall_visited
 
     def get_coordinate(self):
         '''return (x, y) coordinate of node in window'''
@@ -85,6 +90,9 @@ class Node:
     def set_prev(self, node):
         self.prev = node
 
+    def set_wall_visited(self, visit):
+        self.wall_visited = visit
+
     def set_g(self, new_g):
         self.g = new_g
 
@@ -121,30 +129,63 @@ class Node:
             return 'E'
         return '0'
 
+    def get_unvisited_wall_neighbours(self, graph):
+        '''return adjacent nodes that are walls'''
+        neighbours = []
+
+        # right
+        if is_valid_pos(self.row + 2, self.col):
+            node = graph[self.row + 2][self.col]
+            if node.is_wall() and not node.is_wall_visited():
+                neighbours.append(node)
+
+        # left
+        if is_valid_pos(self.row - 2, self.col):
+            node = graph[self.row - 2][self.col]
+            if node.is_wall() and not node.is_wall_visited():
+                neighbours.append(node)
+
+        # up
+        if is_valid_pos(self.row, self.col + 2):
+            node = graph[self.row][self.col + 2]
+            if node.is_wall() and not node.is_wall_visited():
+                neighbours.append(node)
+
+        # down
+        if is_valid_pos(self.row, self.col - 2):
+            node = graph[self.row][self.col - 2]
+            if node.is_wall() and not node.is_wall_visited():
+                neighbours.append(node)
+
+        return neighbours
+
+
     def update_neighbours(self, graph):
+        ''' update value of neighbours with adjacent nodes'''
+
         # right
         if is_valid_pos(self.row + 1, self.col):
-            n_node = graph[self.row + 1][self.col]
-            if not n_node.is_wall():
-                self.neighbours.append(n_node)
+            node = graph[self.row + 1][self.col]
+            if not node.is_wall():
+                self.neighbours.append(node)
 
         # left
         if is_valid_pos(self.row - 1, self.col):
-            n_node = graph[self.row - 1][self.col]
-            if not n_node.is_wall():
-                self.neighbours.append(n_node)
+            node = graph[self.row - 1][self.col]
+            if not node.is_wall():
+                self.neighbours.append(node)
 
         # up
         if is_valid_pos(self.row, self.col + 1):
-            n_node = graph[self.row][self.col + 1]
-            if not n_node.is_wall():
-                self.neighbours.append(n_node)
+            node = graph[self.row][self.col + 1]
+            if not node.is_wall():
+                self.neighbours.append(node)
 
         # down
         if is_valid_pos(self.row, self.col - 1):
-            n_node = graph[self.row][self.col - 1]
-            if not n_node.is_wall():
-                self.neighbours.append(n_node)
+            node = graph[self.row][self.col - 1]
+            if not node.is_wall():
+                self.neighbours.append(node)
 
 
 class Graph:
@@ -153,13 +194,15 @@ class Graph:
         self.win = win
         self.start = None
         self.end = None
-        self.algo_choice = 2
+        self.algo_choice = 0  # set a* to default algorithm
 
     def get_node(self, row, col):
         return self.graph[row][col]
 
     def update(self):
+        clock = pygame.time.Clock()
         self.draw_graph()
+        clock.tick(FPS)
         pygame.display.update()
 
     def update_node_neighbours(self):
@@ -226,6 +269,82 @@ class Graph:
 
         elif node == self.end:
             self.end = None
+
+
+    def generate_maze(self):
+        # http://weblog.jamisbuck.org/2010/12/27/maze-generation-recursive-backtracking
+        # Recursive Backtracking (DFS)
+
+        # 1) Set all nodes to wall
+        for row in self.graph:
+            for node in row:
+                node.set_wall()
+
+        # 2) Choose a starting point in the field
+        start_row = 0 # random.randint(0, ROWS - 1)
+        start_col = 0 # random.randint(0, COLS - 1)
+        start_node = self.graph[start_row][start_col]
+
+        # 3) Randomly choose a wall at that point and carve a passage through to the adjacent cell, 
+        #    but only if the adjacent cell has not been visited yet. This becomes the new current cell.
+        stack = [start_node]
+        flag = False
+        while len(stack) != 0:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+
+            curr_node = stack[-1]
+            curr_node.set_open()
+            self.update()
+            curr_node.reset()
+
+            if curr_node == start_node and flag:
+                self.update()
+                break
+
+            flag = True
+            unvisisted_wall_neighbours = curr_node.get_unvisited_wall_neighbours(self.graph)
+
+            # 4) If all adjacent cells have been visited, back up to the last cell that has uncarved walls and repeat.
+            if len(unvisisted_wall_neighbours) == 0: 
+                stack.pop()
+
+            else:
+                next_node = unvisisted_wall_neighbours[random.randint(0, len(unvisisted_wall_neighbours) - 1)]
+                stack.append(next_node)
+                curr_node.reset()
+
+                # create path by removing wall b/w 2 nodes
+                d_row = curr_node.row - next_node.row
+                d_col = curr_node.col - next_node.col
+                wall_row, wall_col = curr_node.row, curr_node.col
+
+                if d_row > 0:
+                    wall_row -= 1
+                elif d_row < 0:
+                    wall_row += 1
+
+                if d_col > 0:
+                    wall_col -= 1
+                elif d_col < 0:
+                    wall_col += 1
+
+                wall_node = self.graph[wall_row][wall_col]
+                wall_node.set_open()
+                self.update()
+                wall_node.reset()
+
+        for row in self.graph:
+            for node in row:
+                if node.is_open():
+                    node.reset()
+                
+
+
+
+
+
 
     def a_star(self):
         '''visualise a* path finding algorithm on grid / graph'''
@@ -332,6 +451,7 @@ class Graph:
 
 
     def dfs(self):
+        ''' visualise dfs path finding algorithm '''
         self.update_node_neighbours()
         stack = [self.start]
 
@@ -365,6 +485,10 @@ class Graph:
 
 
     def bfs(self):
+        ''' 
+        visualise bds path finding algortihm, 
+        similar to dijkstra but bfs uses a queue instead of priority queue 
+        '''
         self.update_node_neighbours()
         queue = [self.start]
 

@@ -33,6 +33,11 @@ def main():
                 if event.key == pygame.K_r and not started:  # reset graph
                     graph.reset_graph()
 
+                if event.key == pygame.K_m and not started:
+                    started = True
+                    graph.generate_maze()
+                    started = False
+
         graph.update()
 
     pygame.quit()
