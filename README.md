@@ -11,7 +11,6 @@ The program also can display how a maze can be generated using recursive backtra
 
 This program is coded in python and uses the pygame library as the GUI.
 
-***
 
 ## Algorithms
 
@@ -38,7 +37,6 @@ it reaches a node that has no unvisited neighbours, where the algorithm will the
 backtrack to the last node that still have unvisited neighbours. The algorithm stops
 once it reaches the start node.
 
-***
 
 ## Running the program
 
@@ -62,7 +60,7 @@ Left click
 
 Press `m` to generate maze  
 Press `r` to reset graph
-***
+
 
 ## References
 - https://www.youtube.com/watch?v=GC-nBgi9r0U&t=104s
