@@ -30,10 +30,10 @@ def main():
                     graph.start_vis()
                     started = False
                 
-                if event.key == pygame.K_r and not started:  # reset graph
+                if event.key == pygame.K_r and not started:  # reset graph when 'r' is clicked
                     graph.reset_graph()
 
-                if event.key == pygame.K_m and not started:
+                if event.key == pygame.K_m and not started: # generate maze when 'm' is clicked
                     started = True
                     graph.generate_maze()
                     started = False

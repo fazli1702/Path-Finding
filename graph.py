@@ -5,7 +5,7 @@ import math
 import random
 
 def h(pos1, pos2):
-    '''heuristic function'''
+    '''heuristic function for a* algo'''
     x1, y1 = pos1
     x2, y2 = pos2
     x = abs(x1 - x2)
@@ -227,14 +227,15 @@ class Graph:
 
 
     def start_vis(self):
-        if self.algo_choice == 0:
-            self.a_star()
-        elif self.algo_choice == 1:
-            self.dijsktra()
-        elif self.algo_choice == 2:
-            self.dfs() 
-        elif self.algo_choice == 3:
-            self.bfs()
+        if self.start and self.end:  # ensure that start & end node has been selected
+            if self.algo_choice == 0:
+                self.a_star()
+            elif self.algo_choice == 1:
+                self.dijsktra()
+            elif self.algo_choice == 2:
+                self.dfs() 
+            elif self.algo_choice == 3:
+                self.bfs()
 
     def left_click(self, mouse_coordinate):
         # edit graph
@@ -281,8 +282,8 @@ class Graph:
                 node.set_wall()
 
         # 2) Choose a starting point in the field
-        start_row = 0 # random.randint(0, ROWS - 1)
-        start_col = 0 # random.randint(0, COLS - 1)
+        start_row = random.randint(0, ROWS - 1)
+        start_col = random.randint(0, COLS - 1)
         start_node = self.graph[start_row][start_col]
 
         # 3) Randomly choose a wall at that point and carve a passage through to the adjacent cell, 
@@ -340,10 +341,6 @@ class Graph:
                 if node.is_open():
                     node.reset()
                 
-
-
-
-
 
 
     def a_star(self):
@@ -520,12 +517,11 @@ class Graph:
 
                 
     def display_path(self):
+        '''change selected node to blue colour to show path created by algorithm'''
         path = []
         curr_node = self.end
         while True:
-            # print('curr_node pos:', curr_node.row, curr_node.col)
             prev_node = curr_node.get_prev()
-            # print('prev_node pos:', prev_node.row, prev_node.col)
             if prev_node == self.start:
                 break
             path.append(prev_node)
@@ -541,6 +537,7 @@ class Graph:
         print(self.graph)
 
     def draw_grid(self):
+        '''draw horizontal & vertical line on board / checkerboard'''
         for y in range(0, HEIGHT + SQUARE_SIZE, SQUARE_SIZE):
             pygame.draw.line(self.win, GREY, (0, y), (WIDTH, y))
 
